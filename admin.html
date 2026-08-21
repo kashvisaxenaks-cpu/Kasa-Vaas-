@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kasa Vaas — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#0e0d0b;color:#f5efe6;font-family:Inter,sans-serif}main{width:min(900px,92%);margin:0 auto;padding:48px 0 80px}.brand{color:#c9a96e;letter-spacing:4px;text-transform:uppercase;font-size:11px}.title{font:500 52px/1.05 'Cormorant Garamond',serif;margin:12px 0 8px}.sub{color:#a9a198;margin-bottom:36px}.panel{background:#171512;border:1px solid #302a22;padding:28px;margin-bottom:20px}.panel h2{font:400 30px 'Cormorant Garamond',serif;margin:0 0 20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}.field.full{grid-column:1/-1}label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#c9a96e}input,textarea,select{font:14px Inter,sans-serif;color:#f5efe6;background:#0e0d0b;border:1px solid #3a332a;padding:13px 14px;border-radius:2px;outline:none}input:focus,textarea:focus,select:focus{border-color:#c9a96e}textarea{min-height:110px;resize:vertical}.actions{display:flex;gap:10px;align-items:center}.btn{border:1px solid #c9a96e;background:#c9a96e;color:#0e0d0b;padding:13px 20px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer}.btn.secondary{background:transparent;color:#e2c99a}.status{font-size:13px;color:#a9a198}.hidden{display:none}.login{max-width:430px;margin:90px auto}.error{color:#d99a8c}.success{color:#9fc8a3}.preview{max-width:220px;max-height:180px;object-fit:cover;margin-top:8px;border:1px solid #302a22}@media(max-width:650px){.grid{grid-template-columns:1fr}.field.full{grid-column:auto}.title{font-size:42px}}
+  </style>
+</head>
+<body>
+  <main>
+    <section id="loginPanel" class="panel login">
+      <div class="brand">Kasa Vaas</div>
+      <h1 class="title">Owner access</h1>
+      <p class="sub">Sign in to add inspiration to the Kasa Vaas moodboards.</p>
+      <div class="field"><label>Email</label><input id="email" type="email" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password"></div>
+      <div class="actions"><button id="loginBtn" class="btn">Sign In</button><span id="loginStatus" class="status"></span></div>
+    </section>
+
+    <section id="adminPanel" class="hidden">
+      <div class="brand">Kasa Vaas / Owner</div>
+      <h1 class="title">Moodboard Studio</h1>
+      <p class="sub">Add and publish inspiration. Only your authenticated owner account can use this dashboard.</p>
+      <div class="panel">
+        <h2>Add inspiration</h2>
+        <form id="inspirationForm">
+          <div class="grid">
+            <div class="field"><label>Title</label><input id="title" required placeholder="Warm Japandi Living Room"></div>
+            <div class="field"><label>Space</label><select id="space" required><option value="Residential">Residential</option><option value="Hospitality">Hospitality</option><option value="Commercial">Commercial</option><option value="Speciality">Speciality</option></select></div>
+            <div class="field"><label>Style</label><input id="style" placeholder="Japandi"></div>
+            <div class="field"><label>Location</label><input id="location" placeholder="Pune, India"></div>
+            <div class="field full"><label>Description</label><textarea id="description" placeholder="What makes this space thoughtful?"></textarea></div>
+            <div class="field full"><label>Inspiration image</label><input id="image" type="file" accept="image/*" required><img id="preview" class="preview hidden" alt="Preview"></div>
+          </div>
+          <div class="actions"><button class="btn" type="submit">Publish Inspiration</button><button id="logoutBtn" class="btn secondary" type="button">Log Out</button><span id="publishStatus" class="status"></span></div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Replace these two values with your Supabase project's public URL and anon key.
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const OWNER_EMAIL = 'YOUR_OWNER_EMAIL';
+
+    const configured = !SUPABASE_URL.startsWith('YOUR_') && !SUPABASE_ANON_KEY.startsWith('YOUR_');
+    const sb = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+    const $ = id => document.getElementById(id);
+
+    function showAdmin(user){
+      if (!user || user.email.toLowerCase() !== OWNER_EMAIL.toLowerCase()) { $('loginPanel').classList.remove('hidden'); $('adminPanel').classList.add('hidden'); return; }
+      $('loginPanel').classList.add('hidden'); $('adminPanel').classList.remove('hidden');
+    }
+
+    $('loginBtn').onclick = async () => {
+      if (!configured) { $('loginStatus').textContent='Supabase setup is required first.'; $('loginStatus').className='status error'; return; }
+      $('loginStatus').textContent='Signing in…';
+      const {data,error}=await sb.auth.signInWithPassword({email:$('email').value,password:$('password').value});
+      if(error){$('loginStatus').textContent=error.message;$('loginStatus').className='status error';return;}
+      showAdmin(data.user);
+    };
+
+    $('logoutBtn').onclick=async()=>{if(sb) await sb.auth.signOut();showAdmin(null)};
+
+    $('image').onchange=()=>{const f=$('image').files[0];if(!f)return;$('preview').src=URL.createObjectURL(f);$('preview').classList.remove('hidden')};
+
+    $('inspirationForm').onsubmit=async e=>{
+      e.preventDefault();
+      if(!sb){$('publishStatus').textContent='Supabase setup is required first.';$('publishStatus').className='status error';return;}
+      const {data:{user}}=await sb.auth.getUser();
+      if(!user || user.email.toLowerCase()!==OWNER_EMAIL.toLowerCase()){showAdmin(null);return;}
+      const file=$('image').files[0]; if(!file)return;
+      $('publishStatus').textContent='Uploading…';
+      const safeName=file.name.toLowerCase().replace(/[^a-z0-9.]+/g,'-');
+      const path=`${crypto.randomUUID()}-${safeName}`;
+      const upload=await sb.storage.from('inspiration').upload(path,file,{upsert:false,contentType:file.type});
+      if(upload.error){$('publishStatus').textContent=upload.error.message;$('publishStatus').className='status error';return;}
+      const imageUrl=sb.storage.from('inspiration').getPublicUrl(path).data.publicUrl;
+      const insert=await sb.from('inspirations').insert({title:$('title').value,space:$('space').value,style:$('style').value,location:$('location').value,description:$('description').value,image_url:imageUrl,created_by:user.id});
+      if(insert.error){$('publishStatus').textContent=insert.error.message;$('publishStatus').className='status error';return;}
+      $('publishStatus').textContent='Published ✓';$('publishStatus').className='status success';$('inspirationForm').reset();$('preview').classList.add('hidden');
+    };
+
+    (async()=>{
+      if(!configured){$('loginStatus').textContent='Connect Supabase to activate owner access.';$('loginStatus').className='status';return;}
+      const {data}=await sb.auth.getUser();showAdmin(data.user);
+    })();
+  </script>
+</body>
+</html>
