@@ -1,4 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Simple workflow for deploying static content to Pages
 name: Deploy static content to Pages
 
 on:
@@ -27,6 +27,16 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
+      - name: Copy Kasa Vaas image assets to site root
+        run: |
+          cp kasa-vaas/bedroom1.jpg .
+          cp kasa-vaas/cafe1.jpg .
+          cp kasa-vaas/hero1.jpg .
+          cp kasa-vaas/kitchen1.jpg .
+          cp kasa-vaas/living1.jpg .
+          cp kasa-vaas/office1.jpg .
+          cp kasa-vaas/logo.png .
 
       - name: Add Kasa Vaas space auth gate
         run: |
