@@ -15,67 +15,60 @@ create table if not exists public.inspirations (
 
 alter table public.inspirations enable row level security;
 
--- Everyone can read published inspiration.
 drop policy if exists "Public can view inspirations" on public.inspirations;
 create policy "Public can view inspirations"
 on public.inspirations for select
 using (true);
 
--- Only the owner account can insert. Replace this email with your email.
 drop policy if exists "Owner can add inspirations" on public.inspirations;
 create policy "Owner can add inspirations"
 on public.inspirations for insert
 to authenticated
 with check (
-  auth.jwt() ->> 'email' = 'YOUR_OWNER_EMAIL'
+  auth.jwt() ->> 'email' = 'kashvi.saxenaks@gmail.com'
   and created_by = auth.uid()
 );
 
--- Only the owner can update/delete their content.
 drop policy if exists "Owner can update inspirations" on public.inspirations;
 create policy "Owner can update inspirations"
 on public.inspirations for update
 to authenticated
-using (auth.jwt() ->> 'email' = 'YOUR_OWNER_EMAIL')
-with check (auth.jwt() ->> 'email' = 'YOUR_OWNER_EMAIL');
+using (auth.jwt() ->> 'email' = 'kashvi.saxenaks@gmail.com')
+with check (auth.jwt() ->> 'email' = 'kashvi.saxenaks@gmail.com');
 
 drop policy if exists "Owner can delete inspirations" on public.inspirations;
 create policy "Owner can delete inspirations"
 on public.inspirations for delete
 to authenticated
-using (auth.jwt() ->> 'email' = 'YOUR_OWNER_EMAIL');
+using (auth.jwt() ->> 'email' = 'kashvi.saxenaks@gmail.com');
 
--- Create a public storage bucket for inspiration images.
 insert into storage.buckets (id, name, public)
 values ('inspiration', 'inspiration', true)
 on conflict (id) do update set public = true;
 
--- Anyone can view published images.
 drop policy if exists "Public can view inspiration images" on storage.objects;
 create policy "Public can view inspiration images"
 on storage.objects for select
 using (bucket_id = 'inspiration');
 
--- Only the owner can upload.
 drop policy if exists "Owner can upload inspiration images" on storage.objects;
 create policy "Owner can upload inspiration images"
 on storage.objects for insert
 to authenticated
 with check (
   bucket_id = 'inspiration'
-  and auth.jwt() ->> 'email' = 'YOUR_OWNER_EMAIL'
+  and auth.jwt() ->> 'email' = 'kashvi.saxenaks@gmail.com'
 );
 
--- Only the owner can update/delete inspiration images.
 drop policy if exists "Owner can update inspiration images" on storage.objects;
 create policy "Owner can update inspiration images"
 on storage.objects for update
 to authenticated
-using (bucket_id = 'inspiration' and auth.jwt() ->> 'email' = 'YOUR_OWNER_EMAIL')
-with check (bucket_id = 'inspiration' and auth.jwt() ->> 'email' = 'YOUR_OWNER_EMAIL');
+using (bucket_id = 'inspiration' and auth.jwt() ->> 'email' = 'kashvi.saxenaks@gmail.com')
+with check (bucket_id = 'inspiration' and auth.jwt() ->> 'email' = 'kashvi.saxenaks@gmail.com');
 
 drop policy if exists "Owner can delete inspiration images" on storage.objects;
 create policy "Owner can delete inspiration images"
 on storage.objects for delete
 to authenticated
-using (bucket_id = 'inspiration' and auth.jwt() ->> 'email' = 'YOUR_OWNER_EMAIL');
+using (bucket_id = 'inspiration' and auth.jwt() ->> 'email' = 'kashvi.saxenaks@gmail.com');
