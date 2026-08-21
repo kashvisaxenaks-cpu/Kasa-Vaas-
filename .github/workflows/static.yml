@@ -18,10 +18,14 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout stable Kasa Vaas site
         uses: actions/checkout@v4
+        with:
+          ref: de1c9b50aee197e5c6fe439f1e122dfab8d50e93
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Copy Kasa Vaas image assets to site root
         run: |
           cp kasa-vaas/bedroom1.jpg .
@@ -31,6 +35,7 @@ jobs:
           cp kasa-vaas/living1.jpg .
           cp kasa-vaas/office1.jpg .
           cp kasa-vaas/logo.png .
+
       - name: Add Kasa Vaas scripts
         run: |
           python - <<'PY'
@@ -39,8 +44,8 @@ jobs:
           html = path.read_text(encoding="utf-8")
           scripts = [
               '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>',
-              '<script src="space-auth.js"></script>',
-              '<script src="live-moodboard.js"></script>'
+              '<script src="space-auth.js?v=2"></script>',
+              '<script src="moodboard-live.js?v=2"></script>'
           ]
           for script in scripts:
               if script not in html:
@@ -48,10 +53,12 @@ jobs:
                   html=html.replace(marker, script+'\n'+marker, 1) if marker in html else html+'\n'+script
           path.write_text(html,encoding='utf-8')
           PY
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
