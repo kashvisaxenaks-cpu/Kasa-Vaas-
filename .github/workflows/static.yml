@@ -37,7 +37,12 @@ jobs:
           from pathlib import Path
           path = Path("index.html")
           html = path.read_text(encoding="utf-8")
-          for script in ['<script src="space-auth.js"></script>','<script src="moodboard-live.js"></script>']:
+          scripts = [
+              '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>',
+              '<script src="space-auth.js"></script>',
+              '<script src="live-moodboard.js"></script>'
+          ]
+          for script in scripts:
               if script not in html:
                   marker='</body>'
                   html=html.replace(marker, script+'\n'+marker, 1) if marker in html else html+'\n'+script
