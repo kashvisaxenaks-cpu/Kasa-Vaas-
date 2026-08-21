@@ -13,21 +13,26 @@
     style.textContent = `
       #kv-space-auth-overlay {
         position: fixed; inset: 0; z-index: 99999;
-        display: none; align-items: center; justify-content: center;
+        display: none; align-items: flex-start; justify-content: center;
         padding: 24px; background: rgba(8,7,6,.78); backdrop-filter: blur(12px);
+        overflow-y: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box;
       }
       #kv-space-auth-overlay.kv-open { display: flex; }
       .kv-space-auth-card {
-        width: min(460px, 100%); position: relative; padding: 42px 38px 36px;
+        width: min(460px, 100%); position: relative; margin: auto 0;
+        padding: 42px 38px 36px; max-height: calc(100vh - 48px);
+        overflow-y: auto; overflow-x: hidden; box-sizing: border-box;
         background: #171512; border: 1px solid rgba(201,169,110,.28);
         box-shadow: 0 30px 90px rgba(0,0,0,.55); color: #F5EFE6;
-        text-align: center; border-radius: 4px;
+        text-align: center; border-radius: 4px; overscroll-behavior: contain;
       }
+      .kv-space-auth-card::-webkit-scrollbar { width: 5px; }
+      .kv-space-auth-card::-webkit-scrollbar-thumb { background: rgba(201,169,110,.45); border-radius: 5px; }
       .kv-space-auth-close {
         position: absolute; top: 14px; right: 16px; width: 34px; height: 34px;
         border: 1px solid rgba(245,239,230,.18); background: transparent;
         color: #F5EFE6; cursor: pointer; border-radius: 50%; font-size: 20px;
-        line-height: 1;
+        line-height: 1; z-index: 2;
       }
       .kv-space-auth-kicker { color:#C9A96E; font-size:10px; letter-spacing:3px; text-transform:uppercase; margin-bottom:12px; }
       .kv-space-auth-title { font-family:'DM Serif Display', Georgia, serif; font-size:38px; line-height:1.05; margin:0 0 12px; font-weight:400; }
@@ -41,7 +46,11 @@
       .kv-space-auth-primary { background:#C9A96E; color:#0E0D0B; border:1px solid #C9A96E; }
       .kv-space-auth-secondary { background:transparent; color:#E2C99A; border:1px solid rgba(201,169,110,.55); }
       .kv-space-auth-note { margin-top:18px; color:rgba(245,239,230,.35); font-size:10px; line-height:1.6; }
-      @media (max-width:520px) { .kv-space-auth-card{padding:38px 24px 28px}.kv-space-auth-title{font-size:32px} }
+      @media (max-width:520px) {
+        #kv-space-auth-overlay { padding:12px; }
+        .kv-space-auth-card { padding:38px 24px 28px; max-height:calc(100vh - 24px); }
+        .kv-space-auth-title { font-size:32px; }
+      }
     `;
     document.head.appendChild(style);
   }
@@ -72,7 +81,6 @@
     });
     overlay.querySelectorAll('[data-auth-action]').forEach(function (button) {
       button.addEventListener('click', function () {
-        // Keep the destination context ready for the real auth flow to use later.
         sessionStorage.setItem('kasaVaasPendingSpace', selectedCategory);
         const action = button.dataset.authAction;
         alert(action === 'signin'
@@ -89,6 +97,7 @@
     overlay.querySelector('.kv-space-auth-category').textContent = category;
     overlay.classList.add('kv-open');
     document.body.style.overflow = 'hidden';
+    overlay.scrollTop = 0;
     overlay.querySelector('.kv-space-auth-close').focus();
   }
 
@@ -125,7 +134,6 @@
     buildModal();
     CATEGORIES.forEach(wireCategory);
 
-    // Framer-like/generated pages can populate sections after initial load.
     const observer = new MutationObserver(function () {
       CATEGORIES.forEach(wireCategory);
     });
