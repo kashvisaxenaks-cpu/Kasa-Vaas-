@@ -1,20 +1,16 @@
 # Simple workflow for deploying static content to Pages
 name: Deploy static content to Pages
-
 on:
   push:
     branches: ["main"]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: "pages"
   cancel-in-progress: false
-
 jobs:
   deploy:
     environment:
@@ -24,10 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
       - name: Copy Kasa Vaas image assets to site root
         run: |
           cp kasa-vaas/bedroom1.jpg .
@@ -37,28 +31,22 @@ jobs:
           cp kasa-vaas/living1.jpg .
           cp kasa-vaas/office1.jpg .
           cp kasa-vaas/logo.png .
-
-      - name: Add Kasa Vaas space auth gate
+      - name: Add Kasa Vaas scripts
         run: |
           python - <<'PY'
           from pathlib import Path
           path = Path("index.html")
           html = path.read_text(encoding="utf-8")
-          script = '<script src="space-auth.js"></script>'
-          if script not in html:
-              marker = '</body>'
-              if marker in html:
-                  html = html.replace(marker, script + '\n' + marker, 1)
-              else:
-                  html += '\n' + script + '\n'
-              path.write_text(html, encoding="utf-8")
+          for script in ['<script src="space-auth.js"></script>','<script src="live-moodboard.js"></script>']:
+              if script not in html:
+                  marker='</body>'
+                  html=html.replace(marker, script+'\n'+marker, 1) if marker in html else html+'\n'+script
+          path.write_text(html,encoding='utf-8')
           PY
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
-
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
